@@ -1,0 +1,44 @@
+# ===== IDE =====
+.idea/
+*.iml
+.classpath
+.project
+.settings
+.vscode/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# ===== Java / Maven =====
+**/target/
+**/target
+*.class
+*.jar
+*.war
+*.log
+**/mvnw
+**/mvnw.cmd
+**/.mvn/
+
+# ===== Node =====
+node_modules/
+dist/
+*.tsbuildinfo
+
+# ===== DB =====
+*.sql
+
+# ===== Env / Secrets =====
+.env
+.env.local
+application-local.yml
+settings.local.json
+
+# ===== UniApp =====
+unpackage/
+
+# ===== Git =====
+.git/

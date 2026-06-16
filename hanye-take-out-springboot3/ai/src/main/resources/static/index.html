@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI对话测试</title>
+    <style>
+        /* CSS 样式保持完全不变，你的样式写得很好！ */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .chat-container { width: 100%; max-width: 800px; background: white; border-radius: 15px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); overflow: hidden; display: flex; flex-direction: column; height: 600px; }
+        .chat-header { background: #6366f1; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold; }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .message { max-width: 70%; padding: 12px 16px; border-radius: 18px; line-height: 1.4; word-wrap: break-word; animation: fadeIn 0.3s ease-in; white-space: pre-wrap; /* 允许显示换行符 */ }
+        .message.user { background: #6366f1; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .message.ai { background: #f3f4f6; color: #1f2937; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .chat-input-container { padding: 20px; background: #f9fafb; border-top: 1px solid #e5e7eb; display: flex; gap: 10px; }
+        .user-id-input { flex: 0 0 150px; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.3s; }
+        .user-id-input:focus { border-color: #6366f1; }
+        .message-input { flex: 1; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 25px; font-size: 16px; outline: none; transition: border-color 0.3s; }
+        .message-input:focus { border-color: #6366f1; }
+        .send-button { padding: 12px 24px; background: #6366f1; color: white; border: none; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s; white-space: nowrap; }
+        .send-button:hover { background: #5558e3; transform: translateY(-2px); }
+        .send-button:disabled { background: #9ca3af; cursor: not-allowed; transform: none; }
+        .loading { display: none; padding: 10px 20px; color: #6b7280; font-style: italic; align-self: flex-start; background: #f3f4f6; border-radius: 8px; width: 100%; text-align: center; }
+        .typing-indicator { display: inline-flex; align-items: center; gap: 4px; }
+        .typing-indicator span { height: 8px; width: 8px; background: #6b7280; border-radius: 50%; animation: typing 1.4s infinite; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes typing { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-10px); } }
+        .error-message { color: #ef4444; background: #fee2e2; padding: 10px; border-radius: 8px; margin: 10px 0; text-align: center; }
+        .empty-state { text-align: center; color: #9ca3af; padding: 40px; font-size: 16px; }
+    </style>
+</head>
+<body>
+<div class="chat-container">
+    <div class="chat-header">🤖 苍穹外卖 AI助手</div>
+    <div class="chat-messages" id="chatMessages">
+        <div class="empty-state">开始您的对话吧！</div>
+    </div>
+    <div class="loading" id="loading">
+        <div class="typing-indicator"><span></span><span></span><span></span></div>
+        AI正在思考中...
+    </div>
+    <div class="chat-input-container">
+        <input type="text" id="userIdInput" class="user-id-input" placeholder="用户ID" value="user1">
+        <input type="text" id="messageInput" class="message-input" placeholder="输入您的问题..." onkeypress="handleKeyPress(event)">
+        <button id="sendButton" class="send-button" onclick="sendMessage()">发送</button>
+    </div>
+</div>
+
+<script>
+    // 【修改点1】接口地址改为流式接口 /chatAi/stream
+    const API_BASE_URL = 'http://localhost:8082';
+    const CHAT_ENDPOINT = '/chatAi/stream';
+
+    const chatMessages = document.getElementById('chatMessages');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const userIdInput = document.getElementById('userIdInput');
+    const loading = document.getElementById('loading');
+
+    async function sendMessage() {
+        const userId = userIdInput.value.trim();
+        const message = messageInput.value.trim();
+
+        if (!userId || !message) return;
+
+        // 1. 添加用户消息
+        addMessage(message, 'user');
+        messageInput.value = '';
+
+        // 2. 显示加载动画，禁用按钮
+        showLoading(true);
+        sendButton.disabled = true;
+
+        // 【修改点2】先在界面上创建一个空的 AI 消息气泡，用来接收流式文字
+        const aiMessageDiv = addMessage('', 'ai');
+
+        try {
+            // 【修改点3】发起 fetch 请求
+            const response = await fetch(`${API_BASE_URL}${CHAT_ENDPOINT}?userId=${encodeURIComponent(userId)}&message=${encodeURIComponent(message)}`);
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            // 【修改点4】核心逻辑：获取数据流读取器
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8'); // 用于将二进制流解码为中文字符
+
+            // 只要一连上，就立刻隐藏加载动画，开始“打字”
+            showLoading(false);
+
+            // 死循环不断读取流中的数据块
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break; // 服务器调用 emitter.complete() 时，done 会变成 true
+
+                // 将读取到的二进制数据解码为字符串
+                const chunk = decoder.decode(value, { stream: true });
+
+                // 【修改点5】解析 SSE 协议数据，剥离 "data: "
+                const lines = chunk.split('\n');
+                for (const line of lines) {
+                    if (line.startsWith('data:')) {
+                        // 截取 data: 后面的真实文字 (去除开头的5个字符)
+                        let text = line.substring(5);
+                        // 如果 data: 后面有空格，去掉它（SSE规范通常带有空格）
+                        if (text.startsWith(' ')) text = text.substring(1);
+
+                        // 把文字追加到刚才创建的空对话框里！
+                        aiMessageDiv.textContent += text;
+                        // 保持滚动条在最底部
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showError(`发送失败: ${error.message}`);
+        } finally {
+            showLoading(false);
+            sendButton.disabled = false;
+            messageInput.focus();
+        }
+    }
+
+    // 修改了 addMessage：现在它会返回创建好的 DOM 元素
+    function addMessage(content, type) {
+        const emptyState = chatMessages.querySelector('.empty-state');
+        if (emptyState) emptyState.remove();
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}`;
+        messageDiv.textContent = content; // 初始化内容（AI一开始是空的）
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        return messageDiv; // 【修改点6】返回这个框，方便后续追加文字
+    }
+
+    function showLoading(show) { loading.style.display = show ? 'block' : 'none'; }
+
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = message;
+        chatMessages.appendChild(errorDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        setTimeout(() => errorDiv.remove(), 3000);
+    }
+
+    function handleKeyPress(event) { if (event.key === 'Enter') sendMessage(); }
+    window.onload = function() { messageInput.focus(); };
+</script>
+</body>
+</html>

@@ -1,0 +1,879 @@
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>校园外跑</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #FAFAFA;
+      --surface: #FFFFFF;
+      --fg: #111111;
+      --muted: #6B6B6B;
+      --border: #E5E5E5;
+      --accent: #2F6FEB;
+      --accent-light: #EBF1FF;
+      --success: #17A34A;
+      --warn: #EAB308;
+      --danger: #DC2626;
+      --font: 'Inter', -apple-system, system-ui, sans-serif;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --safe-top: env(safe-area-inset-top, 12px);
+      --safe-bottom: env(safe-area-inset-bottom, 8px);
+    }
+    html, body { font-family: var(--font); background: var(--bg); color: var(--fg); height: 100%; overflow: hidden; -webkit-font-smoothing: antialiased; user-select: none; }
+    #app { position: relative; width: 100%; height: 100%; max-width: 430px; margin: 0 auto; overflow: hidden; background: var(--bg); display: flex; flex-direction: column; }
+    .page-viewport { position: relative; flex: 1; overflow: hidden; }
+    .page-stack { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; background: var(--bg); padding-bottom: 80px; }
+    .page-stack::-webkit-scrollbar { display: none; }
+
+    .page-stack.slide-enter { animation: slideIn .35s cubic-bezier(.16,1,.3,1) forwards; }
+    .page-stack.fade-enter { animation: fadeSlideIn .3s ease forwards; }
+    .page-stack.slide-back { animation: slideBack .3s cubic-bezier(.16,1,.3,1) forwards; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: .4; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideBack { from { transform: translateX(-30%); opacity: .4; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes fadeSlideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .bottom-nav { display: flex; align-items: center; justify-content: space-around; height: 62px; padding: 0 8px; padding-bottom: var(--safe-bottom); background: var(--surface); border-top: 1px solid var(--border); flex-shrink: 0; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; flex: 1; height: 100%; background: none; border: none; cursor: pointer; color: var(--muted); font-size: 10px; font-weight: 500; font-family: var(--font); padding: 0; transition: color .2s; }
+    .nav-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-item.active { color: var(--accent); }
+    .nav-item.active svg { stroke: var(--accent); }
+
+    .status-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 20px 4px; padding-top: var(--safe-top); font-size: 12px; font-weight: 600; color: var(--muted); background: var(--bg); flex-shrink: 0; }
+    .status-bar .time { color: var(--fg); }
+
+    .header { display: flex; align-items: center; justify-content: space-between; padding: 8px 20px; background: var(--bg); flex-shrink: 0; }
+    .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
+    .header .back-btn { display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; background: none; border: none; padding: 4px 0; font-family: var(--font); }
+    .header .back-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; }
+
+    .search-bar { margin: 8px 20px 12px; padding: 10px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; }
+    .search-bar svg { width: 18px; height: 18px; stroke: var(--muted); fill: none; flex-shrink: 0; }
+
+    .shop-card { display: flex; gap: 12px; background: var(--surface); border-radius: var(--radius); padding: 14px; margin: 0 20px 12px; border: 1px solid var(--border); cursor: pointer; transition: transform .12s; }
+    .shop-card:active { transform: scale(.98); }
+    .shop-card .thumb { width: 64px; height: 64px; border-radius: 10px; background: var(--accent-light); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--accent); }
+    .shop-card .info { flex: 1; min-width: 0; }
+    .shop-card .info h3 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+    .shop-card .info .tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 4px; }
+    .shop-card .info .tags span { font-size: 10px; background: var(--accent-light); color: var(--accent); padding: 1px 6px; border-radius: 6px; }
+    .shop-card .info .meta { display: flex; gap: 12px; font-size: 12px; color: var(--muted); }
+    .shop-card .info .meta .rating { color: var(--warn); font-weight: 600; }
+
+    .food-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
+    .food-item .info { flex: 1; }
+    .food-item .info h4 { font-size: 14px; font-weight: 500; }
+    .food-item .info .desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .food-item .price { font-size: 16px; font-weight: 700; color: var(--accent); }
+    .food-item .qty-control { display: flex; align-items: center; gap: 6px; }
+    .food-item .qty-control button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--fg); font-family: var(--font); }
+    .food-item .qty-control button:active { background: var(--border); }
+    .food-item .qty-control span { font-size: 15px; font-weight: 500; min-width: 20px; text-align: center; }
+
+    .cart-bar { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); max-width: 390px; width: calc(100% - 40px); background: var(--fg); color: white; border-radius: 24px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; z-index: 50; box-shadow: 0 4px 20px rgba(0,0,0,.12); cursor: pointer; transition: transform .15s; }
+    .cart-bar:active { transform: translateX(-50%) scale(.97); }
+    .cart-bar .left { display: flex; align-items: center; gap: 10px; }
+    .cart-bar .left .icon-badge { position: relative; }
+    .cart-bar .left .icon-badge svg { width: 24px; height: 24px; stroke: white; fill: none; }
+    .cart-bar .left .badge { position: absolute; top: -4px; right: -6px; background: var(--danger); color: white; font-size: 10px; font-weight: 700; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .cart-bar .total { font-size: 16px; font-weight: 700; }
+
+    .cart-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
+    .cart-item .info { flex: 1; }
+    .cart-item .info h4 { font-size: 14px; font-weight: 500; }
+    .cart-item .price { font-size: 15px; font-weight: 700; color: var(--accent); min-width: 50px; }
+    .cart-item .qty-control { display: flex; align-items: center; gap: 6px; }
+    .cart-item .qty-control button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-size: 16px; font-family: var(--font); }
+    .cart-item .qty-control span { min-width: 20px; text-align: center; font-weight: 500; }
+
+    .checkout-section { padding: 20px; }
+    .checkout-section h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .order-summary { background: var(--surface); border-radius: var(--radius); padding: 16px; border: 1px solid var(--border); }
+    .order-summary .row { display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; }
+    .order-summary .total { font-size: 18px; font-weight: 700; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 8px; }
+    .pay-methods { margin-top: 16px; }
+    .pay-methods label { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; cursor: pointer; }
+    .pay-methods input[type="radio"] { accent-color: var(--accent); }
+
+    .order-card { background: var(--surface); border-radius: var(--radius); margin: 0 20px 12px; border: 1px solid var(--border); overflow: hidden; }
+    .order-card .top { display: flex; justify-content: space-between; padding: 12px 16px; font-size: 12px; font-weight: 600; }
+    .order-card .top.status-paid { background: var(--accent-light); color: var(--accent); }
+    .order-card .top.status-delivering { background: #FFF7ED; color: #C2410C; }
+    .order-card .top.status-delivered { background: #F0FDF4; color: var(--success); }
+    .order-card .top.status-completed { background: var(--border); color: var(--muted); }
+    .order-card .content { padding: 12px 16px; }
+    .order-card .content .shop { font-weight: 600; font-size: 14px; }
+    .order-card .content .items { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .order-card .content .amount { font-size: 16px; font-weight: 700; color: var(--accent); margin-top: 6px; }
+    .order-card .actions { display: flex; gap: 8px; padding: 0 16px 12px; }
+    .order-card .actions button { flex: 1; padding: 10px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; font-family: var(--font); cursor: pointer; transition: background .1s; }
+    .btn-outline { background: none; border: 1px solid var(--border); color: var(--fg); }
+    .btn-outline:active { background: var(--bg); }
+    .btn-solid { background: var(--accent); border: none; color: white; }
+    .btn-solid:active { opacity: .85; }
+    .btn-success { background: var(--success); border: none; color: white; }
+    .btn-success:active { opacity: .85; }
+    .btn-warn { background: #C2410C; border: none; color: white; }
+    .btn-warn:active { opacity: .85; }
+
+    .rider-card { background: var(--surface); border-radius: var(--radius); margin: 0 20px 12px; border: 1px solid var(--border); padding: 16px; }
+    .rider-card .order-id { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    .rider-card .rider-action { margin-top: 10px; }
+    .rider-card .rider-action button { width: 100%; padding: 12px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; font-family: var(--font); cursor: pointer; border: none; }
+    .rider-card .rider-action button:active { opacity: .85; }
+
+    .login-page { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px 32px; min-height: 100%; }
+    .login-logo { width: 64px; height: 64px; border-radius: 20px; background: var(--accent); display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
+    .login-logo svg { width: 32px; height: 32px; stroke: white; fill: none; stroke-width: 2; }
+    .login-page h2 { font-size: 24px; font-weight: 700; }
+    .login-page .sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+    .role-btn { width: 100%; padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all .1s; margin-bottom: 12px; font-family: var(--font); text-align: left; }
+    .role-btn:active { border-color: var(--accent); background: var(--accent-light); }
+    .role-btn .icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .role-btn .icon.customer { background: #F0F9FF; color: var(--accent); }
+    .role-btn .icon.rider { background: #FFF7ED; color: #C2410C; }
+    .role-btn .info h4 { font-size: 15px; font-weight: 600; }
+    .role-btn .info p { font-size: 12px; color: var(--muted); }
+
+    .profile-header { display: flex; align-items: center; gap: 14px; padding: 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
+    .avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 20px; font-weight: 700; flex-shrink: 0; }
+    .profile-info h2 { font-size: 16px; font-weight: 700; }
+    .profile-info .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .menu-list { padding: 8px 0; background: var(--surface); margin-top: 12px; }
+    .menu-item { display: flex; align-items: center; gap: 14px; padding: 14px 20px; font-size: 14px; border: none; background: none; width: 100%; text-align: left; cursor: pointer; color: var(--fg); font-family: var(--font); transition: background .1s; }
+    .menu-item:active { background: var(--bg); }
+    .menu-item svg { width: 20px; height: 20px; stroke: var(--muted); fill: none; flex-shrink: 0; }
+    .btn-switch { width: calc(100% - 40px); margin: 24px 20px 40px; padding: 14px; background: none; border: 1px solid var(--accent); border-radius: var(--radius-sm); color: var(--accent); font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--font); transition: background .1s; }
+    .btn-switch:active { background: var(--accent-light); }
+    .rider-stats { display: flex; gap: 16px; padding: 16px 20px; background: var(--surface); border-bottom: 1px solid var(--border); justify-content: space-around; }
+    .rider-stats .item { text-align: center; }
+    .rider-stats .item .num { font-size: 18px; font-weight: 700; }
+    .rider-stats .item .label { font-size: 11px; color: var(--muted); }
+    .rider-stats .item .num.warn { color: #C2410C; }
+
+    .msg-list { padding: 0; }
+    .msg-item { display: flex; gap: 12px; padding: 14px 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
+    .msg-item .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 6px; }
+    .msg-item .dot.read { background: var(--border); }
+    .msg-item .content { flex: 1; }
+    .msg-item .content .title { font-size: 14px; font-weight: 500; }
+    .msg-item .content .body { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .msg-item .content .time { font-size: 11px; color: var(--border); margin-top: 4px; }
+
+    /* ========== AI 客服 ========== */
+    .ai-float-btn {
+      position: fixed; right: 20px; bottom: 80px; width: 52px; height: 52px; border-radius: 50%;
+      background: var(--accent); color: white; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,.15);
+      border: none; transition: transform .15s;
+    }
+    .ai-float-btn:active { transform: scale(.92); }
+    .ai-float-btn svg { width: 24px; height: 24px; stroke: white; fill: none; stroke-width: 1.8; }
+
+    .ai-panel {
+      position: fixed; right: 16px; bottom: 80px; width: 320px; max-width: calc(100vw - 32px);
+      height: 460px; background: var(--surface); border-radius: 16px; border: 1px solid var(--border);
+      display: flex; flex-direction: column; z-index: 110; box-shadow: 0 8px 30px rgba(0,0,0,.12);
+      overflow: hidden; opacity: 0; pointer-events: none; transform: translateY(12px) scale(.96);
+      transition: opacity .25s, transform .25s cubic-bezier(.16,1,.3,1);
+    }
+    .ai-panel.open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
+
+    .ai-panel .ai-header {
+      display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border);
+    }
+    .ai-panel .ai-header .ai-avatar {
+      width: 32px; height: 32px; border-radius: 50%; background: var(--accent-light);
+      display: flex; align-items: center; justify-content: center; margin-right: 10px;
+    }
+    .ai-panel .ai-header .ai-avatar svg { width: 18px; height: 18px; stroke: var(--accent); fill: none; }
+    .ai-panel .ai-header h3 { font-size: 14px; font-weight: 600; flex: 1; }
+    .ai-panel .ai-header .close-btn {
+      background: none; border: none; cursor: pointer; color: var(--muted); padding: 4px;
+    }
+    .ai-panel .ai-header .close-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; }
+
+    .ai-panel .msg-area {
+      flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .ai-panel .msg-area .msg { display: flex; }
+    .ai-panel .msg-area .msg.ai { justify-content: flex-start; }
+    .ai-panel .msg-area .msg.user { justify-content: flex-end; }
+    .ai-panel .msg-area .msg .bubble {
+      max-width: 80%; padding: 8px 12px; border-radius: 12px; font-size: 13px; line-height: 1.45;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .ai-panel .msg-area .msg.ai .bubble { background: var(--bg); color: var(--fg); border-bottom-left-radius: 4px; }
+    .ai-panel .msg-area .msg.user .bubble { background: var(--accent); color: white; border-bottom-right-radius: 4px; }
+
+    .ai-panel .input-area {
+      display: flex; align-items: center; padding: 8px 12px; border-top: 1px solid var(--border);
+    }
+    .ai-panel .input-area input {
+      flex: 1; border: none; padding: 8px 4px; font-size: 14px; font-family: var(--font);
+      outline: none; background: transparent; color: var(--fg);
+    }
+    .ai-panel .input-area button {
+      background: var(--accent); color: white; border: none; padding: 8px 16px;
+      border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; margin-left: 8px;
+      transition: opacity .1s;
+    }
+    .ai-panel .input-area button:active { opacity: .8; }
+
+    .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(.9); background: var(--fg); color: white; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s cubic-bezier(.16,1,.3,1); z-index: 200; }
+    .toast.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="status-bar"><span class="time" id="statusTime">12:00</span>
+    <div class="status-icons"><svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="14" height="10" rx="2"/><path d="M4 5V7M8 3V9M12 5V7"/></svg></div>
+  </div>
+  <div class="page-viewport" id="pageViewport"></div>
+  <div class="bottom-nav" id="bottomNav"></div>
+</div>
+
+<!-- AI 客服 -->
+<button class="ai-float-btn" id="aiFloatBtn" aria-label="客服">
+  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><circle cx="9" cy="10" r="1.5"/><circle cx="15" cy="10" r="1.5"/><path d="M12 12v2"/></svg>
+</button>
+
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-header">
+    <div class="ai-avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+    <h3>校园外跑 · AI助手</h3>
+    <button class="close-btn" id="aiCloseBtn"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="msg-area" id="aiMsgArea"></div>
+  <div class="input-area">
+    <input type="text" id="aiInput" placeholder="输入问题…" maxlength="120">
+    <button id="aiSendBtn">发送</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+// ====================================================================
+// Data
+// ====================================================================
+const SHOPS = [
+  { id:1, name:'川味小馆', tags:['川菜','热销'], rating:4.8, sales:326, delivery:'免费', minOrder:12, logo:'🌶️' },
+  { id:2, name:'粤式茶点', tags:['茶点','清淡'], rating:4.6, sales:198, delivery:'2元', minOrder:8, logo:'🥟' },
+  { id:3, name:'奇妙炸鸡', tags:['炸鸡','宵夜'], rating:4.7, sales:512, delivery:'免费', minOrder:15, logo:'🍗' },
+  { id:4, name:'轻食沙拉', tags:['轻食','减脂'], rating:4.5, sales:89, delivery:'免费', minOrder:10, logo:'🥗' },
+];
+const MENUS = {
+  1: [{id:101,name:'麻辣水煮鱼',desc:'招牌，供2-3人',price:28},{id:102,name:'宫保鸡丁',desc:'经典下饭菜',price:18},{id:103,name:'酸辣土豆丝',desc:'爽口素菜',price:10},{id:104,name:'米饭',desc:'一碗',price:2}],
+  2: [{id:201,name:'虾饺皇',desc:'4只',price:22},{id:202,name:'叉烧包',desc:'3只',price:15},{id:203,name:'肠粉（鲜虾）',desc:'一份',price:12}],
+  3: [{id:301,name:'原味炸鸡腿',desc:'一只',price:12},{id:302,name:'鸡翅桶（6只）',desc:'多种口味',price:28},{id:303,name:'薯条大份',desc:'',price:8}],
+  4: [{id:401,name:'鸡胸肉沙拉',desc:'配油醋汁',price:20},{id:402,name:'牛油果蔬菜碗',desc:'全素',price:22},{id:403,name:'蛋白奶昔',desc:'草莓味',price:15}],
+};
+
+let orders = [];
+let cart = [];
+let orderIdCounter = 1;
+let riderEarnings = 0;
+let riderAdvancedTotal = 0;
+let messages = [];
+
+// ====================================================================
+// AI responses
+// ====================================================================
+function getAIResponse(text) {
+  const t = text.toLowerCase();
+  if (t.includes('垫付') || t.includes('垫钱')) return '骑手需要先垫付餐费给商家，送达后用户确认收货，垫付金+配送费会返还到骑手账户。';
+  if (t.includes('配送') || t.includes('送达')) return '骑手取餐后会按照系统分配的地址配送，送达后用户会收到通知，点击“确认收货”即可。';
+  if (t.includes('支付') || t.includes('付款')) return '目前支持微信支付、支付宝和校园卡余额支付。支付成功后订单进入待接单状态。';
+  if (t.includes('退款') || t.includes('取消')) return '取消订单需要联系人工客服处理（功能开发中），当前暂不支持在线取消。';
+  if (t.includes('骑手') || t.includes('接单')) return '骑手可以在“待接单”页面看到所有已支付订单，点击“接单”后需要垫付餐费，然后开始配送。';
+  if (t.includes('评价') || t.includes('评分')) return '订单完成后，您可以在订单详情页对本次服务进行评价和评分。骑手评分会影响其接单优先级。';
+  if (t.includes('你好') || t.includes('hi') || t.includes('在吗')) return '你好👋 我是校园外跑的AI助手，有什么可以帮你的？例如：垫付流程、配送时间、支付方式……';
+  if (t.includes('客服') || t.includes('人工')) return '当前是AI自动回复。如需人工客服，请拨打校园外跑服务热线：400-000-0000（工作时间 9:00-21:00）。';
+  return `抱歉，我没有完全理解你的问题。你可以试试问：\n• 垫付流程\n• 配送说明\n• 支付方式\n• 骑手接单\n• 评价/评分`;
+}
+
+// ====================================================================
+// State
+// ====================================================================
+const state = { role: null, page: '', currentTab: 'home', shopId: null };
+
+// ====================================================================
+// Utils
+// ====================================================================
+function getCartQty() { return cart.reduce((s,c)=>s+c.items.reduce((a,i)=>a+i.qty,0),0); }
+function getCartTotal() { return cart.reduce((s,c)=>s+c.items.reduce((a,i)=>a+i.price*i.qty,0),0); }
+function findShop(id) { return SHOPS.find(s=>s.id===id); }
+function findFood(sid,fid) { const m=MENUS[sid]; return m&&m.find(f=>f.id===fid); }
+
+function addToCart(sid,fid) {
+  const food=findFood(sid,fid); if(!food)return;
+  let sc=cart.find(c=>c.shopId===sid);
+  if(!sc){ sc={shopId:sid,shopName:findShop(sid).name,items:[]}; cart.push(sc); }
+  let e=sc.items.find(i=>i.foodId===fid);
+  if(e) e.qty++; else sc.items.push({foodId:fid,name:food.name,price:food.price,qty:1});
+  showToast('已加入购物车'); renderCartBar();
+}
+function removeFromCart(sid,fid) {
+  let sc=cart.find(c=>c.shopId===sid); if(!sc)return;
+  let idx=sc.items.findIndex(i=>i.foodId===fid); if(idx===-1)return;
+  if(sc.items[idx].qty>1) sc.items[idx].qty--; else sc.items.splice(idx,1);
+  if(sc.items.length===0) cart=cart.filter(c=>c.shopId!==sid);
+  renderCartBar();
+}
+
+function addMessage(title, body) {
+  messages.unshift({id:Date.now(),title,body,time:new Date().toLocaleString('zh-CN',{hour:'2-digit',minute:'2-digit'}),read:false});
+}
+
+function generateDeliveryAddr() { return '学' + (Math.floor(Math.random()*15+1)) + '宿舍'; }
+function generateRiderName() { const names=['李伟','张强','王浩']; return names[Math.floor(Math.random()*names.length)]; }
+
+// ====================================================================
+// Toast
+// ====================================================================
+let toastTimeout;
+function showToast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout=setTimeout(()=>el.classList.remove('show'),1500);
+}
+
+// ====================================================================
+// DOM refs
+// ====================================================================
+const viewport=document.getElementById('pageViewport');
+const bottomNav=document.getElementById('bottomNav');
+
+function createStack(id) { const d=document.createElement('div'); d.className='page-stack'; d.id=id; return d; }
+function clearViewport() { viewport.innerHTML=''; }
+
+// ====================================================================
+// Cart bar
+// ====================================================================
+let cartBarEl=null;
+function renderCartBar() {
+  if(cartBarEl) cartBarEl.remove();
+  const qty=getCartQty(); const total=getCartTotal();
+  if(qty===0||state.page==='cart'||state.page==='checkout'||state.page==='login')return;
+  cartBarEl=document.createElement('div'); cartBarEl.className='cart-bar';
+  cartBarEl.innerHTML=`<div class="left"><div class="icon-badge"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg><div class="badge">${qty}</div></div><span>查看购物车</span></div><div class="total">¥${total.toFixed(1)}</div>`;
+  cartBarEl.addEventListener('click',()=>navigateCustomer('cart'));
+  viewport.appendChild(cartBarEl);
+}
+
+// ====================================================================
+// Customer navigation
+// ====================================================================
+function navigateCustomer(page,transition='fade') {
+  state.page=page; clearViewport();
+  let stack;
+  switch(page){
+    case 'home': stack=renderHome(); break;
+    case 'shop': stack=renderShop(state.shopId); break;
+    case 'cart': stack=renderCart(); break;
+    case 'checkout': stack=renderCheckout(); break;
+    case 'orders': stack=renderCustomerOrders(); break;
+    case 'profile': stack=renderCustomerProfile(); break;
+    case 'messages': stack=renderMessages(); break;
+    default: stack=renderHome();
+  }
+  if(transition==='slide') stack.classList.add('slide-enter');
+  else if(transition==='slideBack') stack.classList.add('slide-back');
+  else stack.classList.add('fade-enter');
+  viewport.appendChild(stack);
+  renderCartBar();
+  updateNav('customer');
+  updateAIVisibility();
+}
+
+function renderHome() {
+  const s=createStack('page-home');
+  s.innerHTML=`<div class="header"><h1>校园外跑</h1></div>
+    <div class="search-bar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>搜索商家或商品…</div>
+    ${SHOPS.map(sh=>`
+      <div class="shop-card" data-id="${sh.id}">
+        <div class="thumb">${sh.logo}</div>
+        <div class="info">
+          <h3>${sh.name}</h3>
+          <div class="tags">${sh.tags.map(t=>`<span>${t}</span>`).join('')}</div>
+          <div class="meta"><span class="rating">★ ${sh.rating}</span><span>月售${sh.sales}</span><span>配送${sh.delivery}</span><span>起送¥${sh.minOrder}</span></div>
+        </div>
+      </div>
+    `).join('')}`;
+  s.querySelectorAll('.shop-card').forEach(c=>c.addEventListener('click',()=>{state.shopId=parseInt(c.dataset.id);navigateCustomer('shop','slide');}));
+  return s;
+}
+
+function renderShop(sid) {
+  const shop=findShop(sid); if(!shop)return renderHome();
+  const foods=MENUS[sid]||[];
+  const s=createStack('page-shop');
+  s.innerHTML=`<div class="header"><button class="back-btn" data-back><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>返回</button><h1>${shop.name}</h1><div style="width:60px"></div></div>
+    <div style="display:flex;gap:20px;padding:10px 20px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface)"><span>★ ${shop.rating}</span><span>月售${shop.sales}</span><span>配送${shop.delivery}</span></div>
+    <div style="padding:8px 0">
+    ${foods.map(f=>`
+      <div class="food-item" data-fid="${f.id}">
+        <div class="info"><h4>${f.name}</h4>${f.desc?`<div class="desc">${f.desc}</div>`:''}</div>
+        <div class="price">¥${f.price}</div>
+        <div class="qty-control"><button data-dec>−</button><span id="qty-${f.id}">0</span><button data-inc>+</button></div>
+      </div>
+    `).join('')}</div>`;
+  s.querySelector('[data-back]').addEventListener('click',()=>navigateCustomer('home','slideBack'));
+  s.querySelectorAll('.food-item').forEach(item=>{
+    const fid=parseInt(item.dataset.fid);
+    const inc=item.querySelector('[data-inc]'), dec=item.querySelector('[data-dec]'), span=item.querySelector(`#qty-${fid}`);
+    function upd(){ const sc=cart.find(c=>c.shopId===sid); const e=sc&&sc.items.find(i=>i.foodId===fid); span.textContent=e?e.qty:0; }
+    inc.addEventListener('click',e=>{e.stopPropagation();addToCart(sid,fid);upd();});
+    dec.addEventListener('click',e=>{e.stopPropagation();removeFromCart(sid,fid);upd();});
+    upd();
+  });
+  return s;
+}
+
+function renderCart() {
+  const s=createStack('page-cart');
+  let html=`<div class="header"><button class="back-btn" data-back><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>返回</button><h1>购物车</h1><div style="width:60px"></div></div>`;
+  if(cart.length===0){
+    html+=`<div style="text-align:center;padding:60px 20px;color:var(--muted)"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg><p>购物车空空如也</p></div>`;
+    s.innerHTML=html; s.querySelector('[data-back]').addEventListener('click',()=>navigateCustomer('home','slideBack')); return s;
+  }
+  cart.forEach(c=>{
+    html+=`<div style="padding:4px 20px;font-weight:600;font-size:14px;margin-top:8px">${c.shopName}</div>`;
+    c.items.forEach(i=>{
+      html+=`<div class="cart-item" data-sid="${c.shopId}" data-fid="${i.foodId}"><div class="info"><h4>${i.name}</h4></div><div class="price">¥${(i.price*i.qty).toFixed(1)}</div><div class="qty-control"><button data-dec>−</button><span>${i.qty}</span><button data-inc>+</button></div></div>`;
+    });
+  });
+  html+=`<div style="padding:16px 20px"><div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;margin-bottom:12px"><span>总计</span><span style="color:var(--accent)">¥${getCartTotal().toFixed(1)}</span></div><button class="btn-solid" id="checkoutBtn" style="width:100%;padding:14px;font-size:16px">去结算</button></div>`;
+  s.innerHTML=html;
+  s.querySelector('[data-back]').addEventListener('click',()=>navigateCustomer('home','slideBack'));
+  s.querySelectorAll('.cart-item').forEach(item=>{
+    const sid=parseInt(item.dataset.sid), fid=parseInt(item.dataset.fid);
+    item.querySelector('[data-inc]').addEventListener('click',()=>{addToCart(sid,fid);navigateCustomer('cart');});
+    item.querySelector('[data-dec]').addEventListener('click',()=>{removeFromCart(sid,fid);navigateCustomer('cart');});
+  });
+  s.querySelector('#checkoutBtn').addEventListener('click',()=>navigateCustomer('checkout'));
+  return s;
+}
+
+function renderCheckout() {
+  const total=getCartTotal(); const s=createStack('page-checkout');
+  s.innerHTML=`<div class="header"><button class="back-btn" data-back><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>返回购物车</button><h1>确认订单</h1><div style="width:60px"></div></div>
+    <div class="checkout-section">
+      <h3>订单商品</h3>
+      ${cart.map(c=>`
+        <div style="background:var(--surface);border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid var(--border)">
+          <div style="font-weight:600;font-size:14px;margin-bottom:6px">${c.shopName}</div>
+          ${c.items.map(i=>`<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);padding:2px 0"><span>${i.name} × ${i.qty}</span><span>¥${(i.price*i.qty).toFixed(1)}</span></div>`).join('')}
+        </div>
+      `).join('')}
+      <div class="order-summary" style="margin-top:12px">
+        <div class="row"><span>商品小计</span><span>¥${total.toFixed(1)}</span></div>
+        <div class="row"><span>配送费</span><span>¥0</span></div>
+        <div class="row total"><span>合计</span><span>¥${total.toFixed(1)}</span></div>
+      </div>
+      <div class="pay-methods">
+        <h3>支付方式</h3>
+        <label><input type="radio" name="pay" value="wechat" checked><span>微信支付</span></label>
+        <label><input type="radio" name="pay" value="alipay"><span>支付宝</span></label>
+        <label><input type="radio" name="pay" value="campus"><span>校园卡余额</span></label>
+      </div>
+      <button class="btn-solid" id="payBtn" style="width:100%;padding:14px;font-size:16px;margin-top:20px">确认支付 ¥${total.toFixed(1)}</button>
+      <div style="margin-top:12px;padding:12px;background:#FFF7ED;border-radius:8px;font-size:12px;color:#C2410C">💡 支付后，由骑手先垫付给商家，送达并确认后资金到达骑手账户</div>
+    </div>`;
+  s.querySelector('[data-back]').addEventListener('click',()=>navigateCustomer('cart','slideBack'));
+  s.querySelector('#payBtn').addEventListener('click',()=>{
+    cart.forEach(c=>{
+      const order={
+        id:orderIdCounter++, shopId:c.shopId, shopName:c.shopName,
+        items:c.items.map(i=>({name:i.name,qty:i.qty,price:i.price})),
+        total:c.items.reduce((s,i)=>s+i.price*i.qty,0),
+        status:'paid', rider:null, deliveryAddr:generateDeliveryAddr(), createdAt:new Date().toLocaleString()
+      };
+      orders.push(order);
+      addMessage('订单已提交', `#${order.id} 已支付成功，等待骑手接单。`);
+    });
+    cart=[]; renderCartBar();
+    showToast('支付成功！等待骑手接单');
+    state.currentTab='orders';
+    navigateCustomer('orders');
+  });
+  return s;
+}
+
+function renderCustomerOrders() {
+  const s=createStack('page-orders');
+  const myOrders=orders;
+  let html=`<div class="header"><h1>我的订单</h1></div>`;
+  if(myOrders.length===0){
+    html+=`<div style="text-align:center;padding:60px 20px;color:var(--muted)"><p>暂无订单</p></div>`;
+  } else {
+    myOrders.forEach(o=>{
+      let statusText, cls;
+      switch(o.status){
+        case 'paid': statusText='待接单'; cls='status-paid'; break;
+        case 'pending_pay': statusText='骑手已接单（待垫付）'; cls='status-paid'; break;
+        case 'delivering': statusText='配送中'; cls='status-delivering'; break;
+        case 'delivered': statusText='已送达，待确认'; cls='status-delivered'; break;
+        case 'completed': statusText='已完成'; cls='status-completed'; break;
+        default: statusText=o.status; cls='';
+      }
+      html+=`<div class="order-card" data-oid="${o.id}">
+        <div class="top ${cls}"><span>${o.shopName}</span><span>${statusText}</span></div>
+        <div class="content">
+          ${o.rider?`<div style="font-size:12px;color:var(--muted);margin-bottom:4px">骑手：${o.rider}</div>`:''}
+          <div class="items">${o.items.map(i=>`${i.name} ×${i.qty}`).join('、')}</div>
+          <div class="amount">¥${o.total.toFixed(1)}</div>
+        </div>`;
+      if(o.status==='delivered'){
+        html+=`<div class="actions"><button class="btn-success" data-confirm>确认收货</button></div>`;
+      }
+      html+=`</div>`;
+    });
+  }
+  s.innerHTML=html;
+  s.querySelectorAll('[data-confirm]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      const card=e.target.closest('.order-card');
+      const oid=parseInt(card.dataset.oid);
+      const order=orders.find(o=>o.id===oid);
+      if(order && order.status==='delivered'){
+        order.status='completed';
+        riderEarnings += order.total * 0.2;
+        riderAdvancedTotal -= order.total;
+        showToast('已确认收货，👍');
+        addMessage('订单已完成', `#${order.id} 已确认，谢谢使用！`);
+        navigateCustomer('orders');
+      }
+    });
+  });
+  return s;
+}
+
+function renderCustomerProfile() {
+  const s=createStack('page-profile');
+  s.innerHTML=`<div class="header"><h1>个人中心</h1></div>
+    <div class="profile-header"><div class="avatar">林</div><div class="profile-info"><h2>林小明</h2><div class="sub">2024****021</div></div></div>
+    <div class="stats-row" style="display:flex;justify-content:space-around;padding:16px;background:var(--surface);border-bottom:1px solid var(--border)">
+      <div style="text-align:center"><div style="font-size:18px;font-weight:700">${orders.length}</div><div style="font-size:12px;color:var(--muted)">订单数</div></div>
+      <div style="text-align:center"><div style="font-size:18px;font-weight:700">4.9</div><div style="font-size:12px;color:var(--muted)">好评率</div></div>
+      <div style="text-align:center"><div style="font-size:18px;font-weight:700">${messages.filter(m=>!m.read).length}</div><div style="font-size:12px;color:var(--muted)">未读消息</div></div>
+    </div>
+    <div class="menu-list">
+      <button class="menu-item" id="msgBtn">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>消息通知 ${messages.filter(m=>!m.read).length?`<span style="margin-left:auto;background:var(--danger);color:white;font-size:11px;padding:2px 8px;border-radius:10px">${messages.filter(m=>!m.read).length}</span>`:''}
+      </button>
+      <button class="menu-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>设置</button>
+    </div>
+    <button class="btn-switch" id="switchRole">切换身份</button>`;
+  s.querySelector('#switchRole').addEventListener('click',()=>{state.role=null;navigateLogin();});
+  s.querySelector('#msgBtn').addEventListener('click',()=>navigateCustomer('messages'));
+  s.querySelectorAll('.menu-item:not(#msgBtn)').forEach(i=>i.addEventListener('click',()=>showToast('功能开发中')));
+  return s;
+}
+
+function renderMessages() {
+  const s=createStack('page-msg');
+  let html=`<div class="header"><button class="back-btn" data-back><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>返回</button><h1>消息通知</h1><div style="width:60px"></div></div><div class="msg-list">`;
+  if(messages.length===0) html+=`<div style="text-align:center;padding:60px 20px;color:var(--muted)"><p>暂无消息</p></div>`;
+  else messages.forEach(m=>{
+    html+=`<div class="msg-item"><div class="dot ${m.read?'read':''}"></div><div class="content"><div class="title">${m.title}</div><div class="body">${m.body}</div><div class="time">${m.time}</div></div></div>`;
+  });
+  html+=`</div>`;
+  s.innerHTML=html;
+  s.querySelector('[data-back]').addEventListener('click',()=>navigateCustomer('profile','slideBack'));
+  s.querySelectorAll('.msg-item').forEach((item,i)=>{
+    item.addEventListener('click',()=>{
+      messages[i].read=true;
+      item.querySelector('.dot').classList.add('read');
+    });
+  });
+  return s;
+}
+
+// ====================================================================
+// Rider navigation
+// ====================================================================
+function navigateRider(page,transition='fade') {
+  state.page=page; clearViewport();
+  let stack;
+  switch(page){
+    case 'rider-pending': stack=renderRiderPending(); break;
+    case 'rider-active': stack=renderRiderActive(); break;
+    case 'rider-profile': stack=renderRiderProfile(); break;
+    default: stack=renderRiderPending();
+  }
+  if(transition==='slide') stack.classList.add('slide-enter');
+  else stack.classList.add('fade-enter');
+  viewport.appendChild(stack);
+  updateNav('rider');
+  updateAIVisibility();
+}
+
+function renderRiderPending() {
+  const s=createStack('page-rider-pending');
+  const pending=orders.filter(o=>o.status==='paid');
+  const awaitingPay=orders.filter(o=>o.status==='pending_pay');
+  let html=`<div class="header"><h1>待接单</h1></div>`;
+  if(pending.length===0 && awaitingPay.length===0){
+    html+=`<div style="text-align:center;padding:60px 20px;color:var(--muted)"><p>暂无订单</p></div>`;
+  } else {
+    if(pending.length>0){
+      html+=`<div style="padding:4px 20px;font-size:13px;font-weight:600;color:var(--muted);margin-top:4px">可接单</div>`;
+      pending.forEach(o=>{
+        html+=`<div class="rider-card" data-oid="${o.id}">
+          <div class="order-id">#${o.id} · ${o.shopName}</div>
+          <div style="font-size:13px;margin-bottom:4px">📍 送至 ${o.deliveryAddr}</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">${o.items.map(i=>`${i.name}×${i.qty}`).join('、')}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:16px;font-weight:700;color:var(--accent)">¥${o.total.toFixed(1)}</span>
+            <span style="font-size:12px;color:var(--warn)">需垫付¥${o.total.toFixed(1)}</span>
+          </div>
+          <div class="rider-action"><button class="btn-warn" data-accept>接单（需垫付）</button></div>
+        </div>`;
+      });
+    }
+    if(awaitingPay.length>0){
+      html+=`<div style="padding:4px 20px;font-size:13px;font-weight:600;color:var(--muted);margin-top:12px">已接单 · 待垫付</div>`;
+      awaitingPay.forEach(o=>{
+        html+=`<div class="rider-card" data-oid="${o.id}">
+          <div class="order-id">#${o.id} · ${o.shopName}</div>
+          <div style="font-size:13px;margin-bottom:4px">📍 送至 ${o.deliveryAddr}</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">${o.items.map(i=>`${i.name}×${i.qty}`).join('、')}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:16px;font-weight:700;color:var(--accent)">需垫付¥${o.total.toFixed(1)}</span>
+          </div>
+          <div class="rider-action"><button class="btn-solid" data-pay>我已垫付，开始配送</button></div>
+        </div>`;
+      });
+    }
+  }
+  s.innerHTML=html;
+  s.querySelectorAll('[data-accept]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      const card=e.target.closest('.rider-card');
+      const oid=parseInt(card.dataset.oid);
+      const order=orders.find(o=>o.id===oid);
+      if(order && order.status==='paid'){
+        order.status='pending_pay';
+        order.rider=generateRiderName();
+        showToast('已接单，请先垫付餐费');
+        addMessage('骑手已接单', `订单 #${order.id} 已被骑手 ${order.rider} 接单，等待骑手垫付。`);
+        navigateRider('rider-pending');
+      }
+    });
+  });
+  s.querySelectorAll('[data-pay]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      const card=e.target.closest('.rider-card');
+      const oid=parseInt(card.dataset.oid);
+      const order=orders.find(o=>o.id===oid);
+      if(order && order.status==='pending_pay'){
+        order.status='delivering';
+        riderAdvancedTotal += order.total;
+        showToast(`已垫付 ¥${order.total.toFixed(1)}，开始配送`);
+        addMessage('骑手已垫付，配送中', `骑手 ${order.rider} 已垫付餐费，正在配送中。`);
+        navigateRider('rider-pending');
+      }
+    });
+  });
+  return s;
+}
+
+function renderRiderActive() {
+  const s=createStack('page-rider-active');
+  const delivering=orders.filter(o=>o.status==='delivering');
+  let html=`<div class="header"><h1>配送中</h1></div>`;
+  if(delivering.length===0){
+    html+=`<div style="text-align:center;padding:60px 20px;color:var(--muted)"><p>没有进行中的配送</p></div>`;
+  } else {
+    delivering.forEach(o=>{
+      html+=`<div class="rider-card" data-oid="${o.id}">
+        <div class="order-id">#${o.id} · ${o.shopName}</div>
+        <div style="font-size:13px;margin-bottom:4px">📍 送至 ${o.deliveryAddr}</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px">${o.items.map(i=>`${i.name}×${i.qty}`).join('、')}</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
+          <span>垫付：<strong>¥${o.total.toFixed(1)}</strong></span>
+          <span>配送费：<strong style="color:var(--success)">¥${(o.total*0.2).toFixed(1)}</strong></span>
+        </div>
+        <div class="rider-action"><button class="btn-solid" data-deliver>已送达，通知用户</button></div>
+      </div>`;
+    });
+  }
+  s.innerHTML=html;
+  s.querySelectorAll('[data-deliver]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      const card=e.target.closest('.rider-card');
+      const oid=parseInt(card.dataset.oid);
+      const order=orders.find(o=>o.id===oid);
+      if(order && order.status==='delivering'){
+        order.status='delivered';
+        showToast('已通知用户确认收货');
+        addMessage('订单已送达，请确认', `订单 #${order.id} 已送达 ${order.deliveryAddr}，请确认收货。`);
+        navigateRider('rider-active');
+      }
+    });
+  });
+  return s;
+}
+
+function renderRiderProfile() {
+  const completed=orders.filter(o=>o.status==='completed').length;
+  const s=createStack('page-rider-profile');
+  s.innerHTML=`<div class="header"><h1>骑手中心</h1></div>
+    <div class="profile-header"><div class="avatar" style="background:#FFF7ED;color:#C2410C">李</div><div class="profile-info"><h2>李明</h2><div class="sub">骑手 · 已接${completed}单</div></div></div>
+    <div class="rider-stats">
+      <div class="item"><div class="num">¥${riderEarnings.toFixed(1)}</div><div class="label">已结算配送费</div></div>
+      <div class="item"><div class="num warn">¥${riderAdvancedTotal.toFixed(1)}</div><div class="label">当前垫付中</div></div>
+      <div class="item"><div class="num">${completed}</div><div class="label">完成订单</div></div>
+    </div>
+    <div class="menu-list">
+      <button class="menu-item"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>我的钱包（提现）</button>
+      <button class="menu-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>设置</button>
+    </div>
+    <button class="btn-switch" id="switchRoleRider">切换身份</button>`;
+  s.querySelector('#switchRoleRider').addEventListener('click',()=>{state.role=null;navigateLogin();});
+  s.querySelectorAll('.menu-item').forEach(i=>i.addEventListener('click',()=>showToast('功能开发中')));
+  return s;
+}
+
+// ====================================================================
+// Login
+// ====================================================================
+function navigateLogin() {
+  state.page='login'; state.role=null; clearViewport();
+  bottomNav.style.display='none';
+  const s=createStack('page-login'); s.classList.add('fade-enter');
+  s.innerHTML=`<div class="login-page"><div class="login-logo"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><h2>校园外跑</h2><p class="sub">点餐 · 跑腿 · 赚零花</p><div style="width:100%"><button class="role-btn" data-role="customer"><div class="icon customer"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg></div><div class="info"><h4>我是顾客</h4><p>点餐下单，享受校园美食</p></div></button><button class="role-btn" data-role="rider"><div class="icon rider"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M12 18V12"/><path d="M11 12h2l3-4H9l4-4"/></svg></div><div class="info"><h4>我是骑手</h4><p>接单配送，赚取配送费</p></div></button></div></div>`;
+  viewport.appendChild(s);
+  s.querySelectorAll('.role-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const role=btn.dataset.role;
+      state.role=role;
+      bottomNav.style.display='flex';
+      if(role==='customer'){ state.currentTab='home'; navigateCustomer('home'); }
+      else { state.currentTab='rider-pending'; navigateRider('rider-pending'); }
+      updateAIVisibility();
+    });
+  });
+  updateAIVisibility();
+}
+
+// ====================================================================
+// Bottom nav
+// ====================================================================
+function updateNav(role) {
+  if(role==='customer'){
+    bottomNav.innerHTML=`
+      <button class="nav-item ${state.currentTab==='home'?'active':''}" data-tab="home">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>首页</span>
+      </button>
+      <button class="nav-item ${state.currentTab==='orders'?'active':''}" data-tab="orders">
+        <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg><span>订单</span>
+      </button>
+      <button class="nav-item ${state.currentTab==='profile'?'active':''}" data-tab="profile">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>我的</span>
+      </button>`;
+    bottomNav.querySelectorAll('.nav-item').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const tab=btn.dataset.tab; state.currentTab=tab;
+        if(tab==='home') navigateCustomer('home');
+        else if(tab==='orders') navigateCustomer('orders');
+        else if(tab==='profile') navigateCustomer('profile');
+      });
+    });
+  } else {
+    bottomNav.innerHTML=`
+      <button class="nav-item ${state.currentTab==='rider-pending'?'active':''}" data-tab="rider-pending">
+        <svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M12 18V12"/><path d="M11 12h2l3-4H9l4-4"/></svg><span>待接单</span>
+      </button>
+      <button class="nav-item ${state.currentTab==='rider-active'?'active':''}" data-tab="rider-active">
+        <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span>配送中</span>
+      </button>
+      <button class="nav-item ${state.currentTab==='rider-profile'?'active':''}" data-tab="rider-profile">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>我的</span>
+      </button>`;
+    bottomNav.querySelectorAll('.nav-item').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const tab=btn.dataset.tab; state.currentTab=tab;
+        if(tab==='rider-pending') navigateRider('rider-pending');
+        else if(tab==='rider-active') navigateRider('rider-active');
+        else if(tab==='rider-profile') navigateRider('rider-profile');
+      });
+    });
+  }
+}
+
+// ====================================================================
+// AI 客服 visibility & logic
+// ====================================================================
+function updateAIVisibility() {
+  const btn = document.getElementById('aiFloatBtn');
+  const panel = document.getElementById('aiPanel');
+  const inLogin = (state.page === 'login');
+  btn.style.display = inLogin ? 'none' : 'flex';
+  if (inLogin) {
+    panel.classList.remove('open');
+  }
+}
+
+// AI chat logic
+(function initAI() {
+  const btn = document.getElementById('aiFloatBtn');
+  const panel = document.getElementById('aiPanel');
+  const closeBtn = document.getElementById('aiCloseBtn');
+  const msgArea = document.getElementById('aiMsgArea');
+  const input = document.getElementById('aiInput');
+  const sendBtn = document.getElementById('aiSendBtn');
+
+  function addMessage(role, text) {
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+    div.innerHTML = `<div class="bubble">${text}</div>`;
+    msgArea.appendChild(div);
+    msgArea.scrollTop = msgArea.scrollHeight;
+  }
+
+  function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+    addMessage('user', text);
+    input.value = '';
+    // AI typing delay
+    setTimeout(() => {
+      const reply = getAIResponse(text);
+      addMessage('ai', reply);
+    }, 500 + Math.random() * 400);
+  }
+
+  btn.addEventListener('click', () => {
+    panel.classList.toggle('open');
+    if (panel.classList.contains('open') && msgArea.children.length === 0) {
+      // Welcome message
+      addMessage('ai', '你好👋 我是校园外跑的AI助手，有什么可以帮你的？\n\n例如：垫付流程、配送说明、支付方式、骑手接单……');
+    }
+  });
+  closeBtn.addEventListener('click', () => panel.classList.remove('open'));
+  sendBtn.addEventListener('click', sendMessage);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+})();
+
+// ====================================================================
+// Init
+// ====================================================================
+function updateTime(){
+  const n=new Date(); const h=n.getHours().toString().padStart(2,'0'); const m=n.getMinutes().toString().padStart(2,'0');
+  document.getElementById('statusTime').textContent=h+':'+m;
+}
+updateTime(); setInterval(updateTime,30000);
+navigateLogin();
+</script>
+</body>
+</html>

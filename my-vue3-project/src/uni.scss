@@ -1,0 +1,20 @@
+/* ====================================================================
+   校园外跑 — 全局样式变量（对齐 HTML 参考）
+   ==================================================================== */
+
+/* CSS 自定义属性（在 App.vue 中注册） */
+:root {
+  --bg: #FAFAFA;
+  --surface: #FFFFFF;
+  --fg: #111111;
+  --muted: #6B6B6B;
+  --border: #E5E5E5;
+  --accent: #2F6FEB;
+  --accent-light: #EBF1FF;
+  --success: #17A34A;
+  --warn: #EAB308;
+  --danger: #DC2626;
+  --font: -apple-system, system-ui, sans-serif;
+  --radius: 12px;
+  --radius-sm: 8px;
+}

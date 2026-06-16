@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="fun.cyhgraph.mapper.StoreRatingStatsMapper">
+
+    <select id="selectByStoreId" resultType="fun.cyhgraph.entity.StoreRatingStats">
+        SELECT * FROM tb_store_rating_stats WHERE store_id = #{storeId}
+    </select>
+
+    <insert id="calculateAndUpdateStats">
+        REPLACE INTO tb_store_rating_stats (
+            store_id, total_rating, total_count, taste_rating, service_rating,
+            environment_rating, cost_performance_rating, high_count, middle_count, low_count, image_count
+        )
+        SELECT
+            #{storeId},
+            IFNULL(ROUND(AVG(rating), 1), 0),
+            COUNT(id),
+            IFNULL(ROUND(AVG(taste_rating), 1), 0),
+            IFNULL(ROUND(AVG(service_rating), 1), 0),
+            IFNULL(ROUND(AVG(environment_rating), 1), 0),
+            IFNULL(ROUND(AVG(cost_performance_rating), 1), 0),
+            SUM(IF(rating >= 4, 1, 0)),
+            SUM(IF(rating = 3, 1, 0)),
+            SUM(IF(rating &lt;= 2, 1, 0)),
+            SUM(IF(images IS NOT NULL AND images != '[]', 1, 0))
+        FROM tb_evaluate
+        WHERE store_id = #{storeId} AND status = 1
+    </insert>
+</mapper>

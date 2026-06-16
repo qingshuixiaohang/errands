@@ -1,0 +1,11 @@
+hanye:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/hanye_take_out
+    username: root
+    password: root
+  redis:
+    host: localhost
+    port: 6379
+    password: redis123
+    database: 0

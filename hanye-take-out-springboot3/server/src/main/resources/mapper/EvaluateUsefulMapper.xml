@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="fun.cyhgraph.mapper.EvaluateUsefulMapper">
+    <insert id="insert">
+        INSERT IGNORE INTO tb_evaluate_useful (evaluate_id, user_id) VALUES (#{evaluateId}, #{userId})
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM tb_evaluate_useful WHERE evaluate_id = #{evaluateId} AND user_id = #{userId}
+    </delete>
+
+    <select id="checkIsUseful" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM tb_evaluate_useful WHERE evaluate_id = #{evaluateId} AND user_id = #{userId}
+    </select>
+</mapper>

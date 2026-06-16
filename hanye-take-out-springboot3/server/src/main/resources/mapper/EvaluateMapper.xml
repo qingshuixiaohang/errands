@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="fun.cyhgraph.mapper.EvaluateMapper">
+
+    <insert id="insertEvaluate" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO tb_evaluate (
+            user_id, store_id, rating, taste_rating, service_rating,
+            environment_rating, cost_performance_rating, content, images, status
+        ) VALUES (
+                     #{userId}, #{storeId}, #{rating}, #{tasteRating}, #{serviceRating},
+                     #{environmentRating}, #{costPerformanceRating}, #{content}, #{images}, 1
+                 )
+    </insert>
+
+    <select id="selectListByCondition" resultType="fun.cyhgraph.entity.Evaluate">
+        SELECT * FROM tb_evaluate
+        WHERE store_id = #{storeId} AND status = 1
+        <choose>
+            <when test="filter == 'high'"> AND rating >= 4 </when>
+            <when test="filter == 'middle'"> AND rating = 3 </when>
+            <when test="filter == 'low'"> AND rating &lt;= 2 </when>
+            <when test="filter == 'image'"> AND images IS NOT NULL AND images != '[]' </when>
+        </choose>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectById" resultType="fun.cyhgraph.entity.Evaluate">
+        SELECT * FROM tb_evaluate WHERE id = #{id} AND status = 1
+    </select>
+
+    <update id="deleteById">
+        UPDATE tb_evaluate SET status = 2 WHERE id = #{id} AND user_id = #{userId}
+    </update>
+
+    <update id="updateUsefulCount">
+        UPDATE tb_evaluate SET useful_count = useful_count + #{num} WHERE id = #{id}
+    </update>
+</mapper>

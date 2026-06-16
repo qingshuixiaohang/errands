@@ -1,0 +1,64 @@
+classDiagram
+    class User {
+        -Integer id
+        -String name
+        -String openid
+        -String phone
+    }
+
+    class Dish {
+        -Integer id
+        -String name
+        -BigDecimal price
+        -Integer categoryId
+        -String detail
+    }
+
+    class Order {
+        -Integer id
+        -String number
+        -Integer status
+        -Integer userId
+        -BigDecimal amount
+        +PENDING_PAYMENT : Integer = 1
+        +TO_BE_CONFIRMED : Integer = 2
+        +CONFIRMED : Integer = 3
+        +DELIVERY_IN_PROGRESS : Integer = 4
+        +COMPLETED : Integer = 5
+        +CANCELLED : Integer = 6
+    }
+
+    class BaseContext {
+        -ThreadLocal~Integer~ threadLocal
+        +setCurrentId(Integer id)$ void
+        +getCurrentId()$ Integer
+        +removeCurrentId()$ void
+    }
+
+    class Assistant {
+        <<interface>>
+        +chat(String userId, String userMessage) String
+        +chatStream(String userId, String userMessage) TokenStream
+    }
+
+    class AiEvaluateAssistant {
+        <<interface>>
+        +polish(String draft) String
+    }
+
+    User "1" --> "*" Order : places
+    Order "*" --> "*" Dish : contains
+    Assistant ..> BaseContext : uses (获取当前用户ID)
+    AiEvaluateAssistant ..> Order : relates (评价润色)
+
+    note for User "用户实体类，存储用户基本信息。\n通过微信OpenID进行身份认证，\n支持手机号、性别等个人信息管理，\n是系统下单和AI推荐的身份基础。"
+
+    note for Dish "菜品实体类，表示餐厅菜单中的菜品。\n包含菜品名称、价格、详情和分类信息，\n是RAG推荐系统的核心检索数据源，\n也是订单关联的关键业务对象。"
+
+    note for Order "订单实体类，记录外卖交易全生命周期。\n包含6种订单状态（待付款→已完成/已取消）\n和3种支付状态，关联用户与菜品，\n承载下单、配送、支付等核心业务流程。"
+
+    note for BaseContext "上下文工具类，基于ThreadLocal存储当前请求的用户ID。\n在拦截器中自动注入，在业务层静态获取，\n实现无侵入的用户身份透传，\n保障多用户并发场景下的数据隔离。"
+
+    note for Assistant "AI智能推荐服务接口（基于RAG架构）。\n通过LangChain4j @AiService注解声明，\n结合Redis向量检索和菜品知识库，\n为用户提供菜品推荐、价格查询等对话服务。"
+
+    note for AiEvaluateAssistant "AI评价润色服务接口。\n将用户简短口语化的草稿自动转化为\n高质量、真实自然的外卖评价，\n补充环境、服务、味道等细节描述。"

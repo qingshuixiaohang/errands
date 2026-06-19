@@ -7,6 +7,7 @@ import fun.cyhgraph.dto.OrderRejectionDTO;
 import fun.cyhgraph.result.PageResult;
 import fun.cyhgraph.result.Result;
 import fun.cyhgraph.service.OrderService;
+import fun.cyhgraph.service.AIAssignmentService;
 import fun.cyhgraph.vo.OrderStatisticsVO;
 import fun.cyhgraph.vo.OrderVO;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,9 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private AIAssignmentService aiAssignmentService;
 
     /**
      * 条件分页查询订单信息

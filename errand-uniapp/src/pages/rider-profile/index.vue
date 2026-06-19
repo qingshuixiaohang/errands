@@ -61,6 +61,13 @@
     <view class="nav-item active" @tap="switchTab('rider-profile')">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <span>我的</span>
+          <view class="menu-item" @tap="goSchedule">
+        <view class="menu-left">
+          <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <text class="menu-text">空闲时间管理</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
     </view>
   </view>
 </template>
@@ -100,4 +107,8 @@ onShow(() => {
   const m = n.getMinutes().toString().padStart(2, "0")
   time.value = h + ":" + m
 })
+function goSchedule() {
+  uni.navigateTo({ url: '/pages/rider-schedule/index' })
+}
 </script>
+

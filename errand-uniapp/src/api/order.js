@@ -106,3 +106,21 @@ export const getRiderOrdersAPI = (params) => {
     method: "GET",
   })
 }
+
+// ===== AI派单 API =====
+export const acceptAssignmentAPI = (orderId, riderId) => {
+  return http({ url: `/user/assignment/accept/${orderId}/${riderId}`, method: "PUT" })
+}
+export const rejectAssignmentAPI = (orderId) => {
+  return http({ url: `/user/assignment/reject/${orderId}`, method: "PUT" })
+}
+// ===== 骑手空闲时间 API =====
+export const getRiderScheduleAPI = (riderId) => {
+  return http({ url: `/user/rider/schedule/list/${riderId}`, method: "GET" })
+}
+export const saveRiderScheduleAPI = (data) => {
+  return http({ url: "/user/rider/schedule", method: "POST", data })
+}
+export const deleteRiderScheduleAPI = (id) => {
+  return http({ url: `/user/rider/schedule/${id}`, method: "DELETE" })
+}

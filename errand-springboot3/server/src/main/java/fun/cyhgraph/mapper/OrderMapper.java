@@ -7,6 +7,7 @@ import fun.cyhgraph.entity.Order;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -57,4 +58,11 @@ public interface OrderMapper {
     Integer countByMap(Map map);
 
     List<GoodsSalesDTO> getSalesTop10(LocalDateTime beginTime, LocalDateTime endTime);
+
+    @Update("update orders set assigned_rider_id=#{riderId}, assignment_type=1 " +
+            "where id=#{orderId}")
+    void assignRider(@Param("orderId") Integer orderId, @Param("riderId") Integer riderId);
+
+    @Update("update orders set status=#{status} where id=#{id}")
+    void updateStatusOnly(@Param("id") Integer id, @Param("status") Integer status);
 }

@@ -10,6 +10,7 @@
     { "path": "pages/messages/index", "style": { "navigationBarTitleText": "消息", "navigationStyle": "custom" } },
     { "path": "pages/address/index", "style": { "navigationBarTitleText": "地址管理", "navigationStyle": "custom" } },
     { "path": "pages/rider-pending/index", "style": { "navigationBarTitleText": "待接单", "navigationStyle": "custom" } },
+    { "path": "pages/rider-schedule/index", "style": { "navigationBarTitleText": "空闲时间管理", "navigationStyle": "custom" } },
     { "path": "pages/rider-active/index", "style": { "navigationBarTitleText": "配送中", "navigationStyle": "custom" } },
     { "path": "pages/rider-profile/index", "style": { "navigationBarTitleText": "骑手中心", "navigationStyle": "custom" } }
   ],

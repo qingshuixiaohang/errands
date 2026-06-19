@@ -29,6 +29,7 @@ public class Order implements Serializable {
     public static final Integer DELIVERY_IN_PROGRESS = 4;
     public static final Integer COMPLETED = 5;
     public static final Integer CANCELLED = 6;
+    public static final Integer AI_ASSIGNING = 7;
 
     /**
      * 支付状态 0未支付 1已支付 2退款
@@ -61,4 +62,8 @@ public class Order implements Serializable {
     private Integer packAmount; // 打包费
     private Integer tablewareNumber; // 餐具数量
     private Integer tablewareStatus; // 餐具数量状态  1按餐量提供  0选择具体数量
+
+    private Integer assignedRiderId; // 被指派的骑手id
+    private Integer assignmentType; // 派单方式 0手动 1AI
+    private Integer riderSettled; // 骑手结算状态
 }

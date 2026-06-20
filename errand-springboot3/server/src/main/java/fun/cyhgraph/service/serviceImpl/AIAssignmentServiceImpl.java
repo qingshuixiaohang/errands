@@ -9,6 +9,8 @@ import fun.cyhgraph.service.AIAssignmentService;
 import fun.cyhgraph.websocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,12 +29,18 @@ public class AIAssignmentServiceImpl implements AIAssignmentService {
     @Autowired private RiderScheduleMapper riderScheduleMapper;
     @Autowired private AiAssignmentLogMapper aiAssignmentLogMapper;
     @Autowired private WebSocketServer webSocketServer;
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Transactional
     public void dispatch(Integer orderId) {
         log.info("AI派单开始: orderId={}", orderId);
         Order order = orderMapper.getById(orderId);
-        if (order == null || order.getStatus() != Order.TO_BE_CONFIRMED) {
+        if (order == null) {
+            log.warn("订单不存在: orderId={}", orderId);
+            return;
+        }
+        if (order.getStatus() != Order.TO_BE_CONFIRMED) {
             log.warn("订单状态不允许AI派单: status={}", order.getStatus());
             return;
         }
@@ -117,8 +125,13 @@ public class AIAssignmentServiceImpl implements AIAssignmentService {
     public void acceptAssignment(Integer orderId, Integer riderId) {
         log.info("骑手接受派单: orderId={}, riderId={}", orderId, riderId);
         Order order = orderMapper.getById(orderId);
-        if (order == null || order.getStatus() != Order.AI_ASSIGNING) {
-            throw new OrderBusinessException("订单状态异常");
+        if (order == null) {
+            log.warn("订单不存在: orderId={}", orderId);
+            return;
+        }
+        if (order.getStatus() != Order.AI_ASSIGNING) {
+            log.warn("订单状态异常, 当前status={}, 需要status=7", order.getStatus());
+            return;
         }
         order.setStatus(Order.CONFIRMED);
         orderMapper.update(order);
@@ -137,7 +150,14 @@ public class AIAssignmentServiceImpl implements AIAssignmentService {
     public void rejectAssignment(Integer orderId) {
         log.info("骑手拒绝派单: orderId={}", orderId);
         Order order = orderMapper.getById(orderId);
-        if (order == null) return;
+        if (order == null) {
+            log.warn("订单不存在: orderId={}", orderId);
+            return;
+        }
+        if (order.getStatus() != Order.AI_ASSIGNING) {
+            log.warn("订单状态异常, 当前status={}, 需要status=7", order.getStatus());
+            return;
+        }
         order.setStatus(Order.TO_BE_CONFIRMED);
         order.setAssignedRiderId(null);
         order.setAssignmentType(0);
@@ -192,22 +212,23 @@ public class AIAssignmentServiceImpl implements AIAssignmentService {
     }
 
     private JSONObject callAiRecommendation(Order order, List<Map<String, Object>> candidates) {
-        // 在实际部署中，这里通过 RestTemplate 调用 AI 模块
-        // 由于 AI 模块是同一项目的独立子模块，直接通过 HTTP 调用
-        JSONObject json = new JSONObject();
-        // 取评分最高的
-        double maxScore = -1;
-        Integer bestId = null;
-        String bestReason = "评分最优";
-        for (Map<String, Object> c : candidates) {
-            double score = ((Number) c.get("score")).doubleValue();
-            if (score > maxScore) {
-                maxScore = score;
-                bestId = (Integer) c.get("id");
-            }
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("orderId", order.getId());
+        requestBody.put("orderAmount", order.getAmount());
+        requestBody.put("address", order.getAddress());
+        requestBody.put("candidates", candidates);
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                "http://localhost:8082/assignment/recommend", request, String.class);
+
+        JSONObject json = JSON.parseObject(response.getBody());
+        if (json.getInteger("code") != null && json.getInteger("code") == 0) {
+            return json.getJSONObject("data");
         }
-        json.put("riderId", bestId);
-        json.put("reason", bestReason);
-        return json;
+        throw new RuntimeException("AI推荐接口异常: " + response.getBody());
     }
 }

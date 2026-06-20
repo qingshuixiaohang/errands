@@ -72,7 +72,7 @@ export const getOrderListByAPI = () => {
 // AI派单
 export const aiDispatchOrderAPI = (params: any) => {
   return request({
-    url: '/admin/order/aiDispatch',
+    url: '/order/aiDispatch',
     method: 'put',
     data: { ...params }
   })

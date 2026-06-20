@@ -43,7 +43,15 @@ public class AssignmentController {
         }
 
         String result = assignmentAssistant.recommend(prompt.toString());
-        log.info("AI推荐结果: {}", result);
+        log.info("AI推荐原始结果: {}", result);
+
+        // AI可能返回分析文字+JSON混合内容，提取最后一个JSON
+        int jsonStart = result.lastIndexOf("{");
+        int jsonEnd = result.lastIndexOf("}");
+        if (jsonStart >= 0 && jsonEnd > jsonStart) {
+            result = result.substring(jsonStart, jsonEnd + 1);
+        }
+        log.info("AI推荐提取JSON: {}", result);
 
         JSONObject jsonResult = JSON.parseObject(result);
         JSONObject response = new JSONObject();
@@ -52,3 +60,4 @@ public class AssignmentController {
         return response;
     }
 }
+

@@ -41,9 +41,13 @@ public class UserController {
                 jwtProperties.getUserTtl(),
                 claims);
         UserLoginVO userLoginVO = UserLoginVO.builder()
+                .riderStatus(user.getRiderStatus())
+                .rating(user.getRating())
+                .totalOrders(user.getTotalOrders())
                 .id(user.getId())
                 .openid(user.getOpenid())
                 .token(token)
+                .name(user.getName())
                 .build();
         return Result.success(userLoginVO);
     }

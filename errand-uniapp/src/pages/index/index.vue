@@ -7,7 +7,7 @@
         </svg>
       </view>
     </view>
-    <view class="header"><h1>校园外跑</h1></view>
+    <view class="header"><h1>抱抱速达</h1></view>
     <scroll-view scroll-y class="scroll" style="flex:1">
       <view class="search-bar">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>

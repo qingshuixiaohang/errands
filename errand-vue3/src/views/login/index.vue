@@ -4,7 +4,7 @@
       <div class="login-left">
         <div class="brand-area">
           <div class="brand-icon">🏃‍♂️</div>
-          <h1 class="brand-title">校园跑腿</h1>
+          <h1 class="brand-title">抱抱速达</h1>
           <p class="brand-subtitle">校园互助 · 即时配送</p>
         </div>
         <div class="mascot-area">

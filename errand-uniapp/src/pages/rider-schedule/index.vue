@@ -41,7 +41,7 @@
         <view class="form-card">
           <view class="form-row">
             <text class="label">星期</text>
-            <picker :range="weekdayOpts" @change="onWeekdayChange">
+            <picker mode="selector" :range="weekdayOpts" :value="form.weekday ? form.weekday - 1 : 0" @change="onWeekdayChange">
               <text class="picker-val">{{ form.weekday ? weekdays[form.weekday] : '请选择' }}</text>
             </picker>
           </view>
@@ -71,7 +71,8 @@
 </template>
 
 <script setup>
-import { ref, onShow } from "vue"
+import { ref } from "vue"
+import { onShow } from "@dcloudio/uni-app"
 import { useUserStore } from "@/stores/user"
 import { getRiderScheduleAPI, saveRiderScheduleAPI, deleteRiderScheduleAPI } from "@/api/order"
 
@@ -86,7 +87,7 @@ const riderId = userStore.profile?.id || 0
 
 const goBack = () => { try { uni.navigateBack() } catch(e) { uni.navigateTo({ url:"/pages/rider-profile/index" }) } }
 
-function onWeekdayChange(e) { form.value.weekday = e.detail.value + 1 }
+function onWeekdayChange(e) { form.value.weekday = Number(e.detail.value) + 1 }
 
 async function loadSchedules() {
   if (!riderId) return
@@ -145,3 +146,4 @@ onShow(() => {
 .label { font-size:14px; color:#3C3C43; min-width:70px }
 .picker-val { font-size:14px; color:#2F6FEB }
 </style>
+

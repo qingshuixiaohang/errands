@@ -310,6 +310,7 @@ export const useCampusStore = defineStore("campus", {
         4: "delivering", // 派送中 → 配送中
         5: "delivered", // 已完成 → 已送达（前端需要确认）
         6: "completed", // 已取消 → 已完成（近似）
+        7: "ai_assigning", // AI派单中
       }
       return map[backendStatus] || "paid"
     },

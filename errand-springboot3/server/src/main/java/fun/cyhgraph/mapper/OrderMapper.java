@@ -7,6 +7,7 @@ import fun.cyhgraph.entity.Order;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDateTime;
@@ -65,4 +66,12 @@ public interface OrderMapper {
 
     @Update("update orders set status=#{status} where id=#{id}")
     void updateStatusOnly(@Param("id") Integer id, @Param("status") Integer status);
+
+    @Select("select * from orders where assigned_rider_id = #{riderId} " +
+            "order by order_time desc")
+    List<Order> getByRiderId(Integer riderId);
+
+    @Select("select * from orders where user_id = #{userId} order by order_time desc")
+    List<Order> getByUserId(Integer userId);
 }
+

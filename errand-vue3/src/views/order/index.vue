@@ -3,6 +3,7 @@ import { ref, reactive, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Empty from '@/components/Empty.vue'
 import {
+  aiDispatchOrderAPI,
   getOrderDetailPageAPI,
   queryOrderDetailByIdAPI,
   completeOrderAPI,
@@ -193,7 +194,6 @@ const orderAccept = async (row: any) => {
     console.error('请求出错了：', err)
   }
 }
-
 // 打开拒单弹窗
 const orderReject = (row: any) => {
   console.log('拒单', row)
@@ -216,6 +216,20 @@ const cancelOrder = (row: any) => {
   cancelReason.value = ''
 }
 
+// AI派单
+const aiDispatchOrder = async (row: any) => {
+  try {
+    const res = await aiDispatchOrderAPI({ orderId: row.id })
+    if (res.data.code === 0) {
+      ElMessage.success('AI派单完成')
+      await init(orderStatus.value)
+    } else {
+      throw new Error(res.data.msg)
+    }
+  } catch (err) {
+    ElMessage.error('AI派单失败: ' + (err as any).message)
+  }
+}
 // 确认取消订单或拒单
 const confirmCancel = async () => {
   if (!cancelReason.value) {
@@ -552,6 +566,8 @@ onMounted(async () => {
               单</el-button>
             <el-button v-if="dialogOrderStatus === 2" type="primary"
               @click="orderAccept(my_row), (isTableOperateBtn = false)">接 单</el-button>
+            <el-button v-if="dialogOrderStatus === 2" type="success"
+              @click="aiDispatchOrder(my_row)">🤖 AI派单</el-button>
 
             <el-button v-if="[1, 3, 4, 5].includes(dialogOrderStatus)" @click="dialogVisible = false">返 回</el-button>
             <el-button v-if="dialogOrderStatus === 3" type="primary" @click="deliveryOrComplete(3, my_row!.id)">派

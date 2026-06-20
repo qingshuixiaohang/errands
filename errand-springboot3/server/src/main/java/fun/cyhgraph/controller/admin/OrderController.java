@@ -13,6 +13,7 @@ import fun.cyhgraph.vo.OrderVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 @RestController("adminOrderController")
 @RequestMapping("/admin/order")
@@ -114,9 +115,21 @@ public class OrderController {
      * @return
      */
     @PutMapping("/complete/{id}")
-    public Result complete(@PathVariable Integer id){
+    public Result complete(@PathVariable Integer id) {
         log.info("已完成：{}", id);
         orderService.complete(id);
+        return Result.success();
+    }
+    /**
+     * AI派单
+     * @param params 包含 orderId 的请求体
+     * @return
+     */
+    @PutMapping("/aiDispatch")
+    public Result aiDispatch(@RequestBody Map<String, Object> params){
+        Integer orderId = Integer.valueOf(params.get("orderId").toString());
+        log.info("AI派单：{}", orderId);
+        aiAssignmentService.dispatch(orderId);
         return Result.success();
     }
 

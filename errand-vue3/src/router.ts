@@ -70,6 +70,16 @@ const router = createRouter({
           component: () => import('./views/employee/add.vue')
         },
         {
+          path: 'user',
+          name: 'user',
+          component: () => import('./views/user/index.vue')
+        },
+        {
+          path: 'rider',
+          name: 'rider',
+          component: () => import('./views/rider/index.vue')
+        },
+        {
           path: 'employee/update',
           name: 'employee_update',
           component: () => import('./views/employee/update.vue')

@@ -33,6 +33,10 @@
     </view>
 
     <view class="menu-list">
+      <view class="menu-item" @tap="goSchedule">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <text>空闲时间管理</text>
+      </view>
       <view class="menu-item" @tap="showDev">
         <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         <text>我的钱包（提现）</text>
@@ -61,15 +65,8 @@
     <view class="nav-item active" @tap="switchTab('rider-profile')">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <span>我的</span>
-          <view class="menu-item" @tap="goSchedule">
-        <view class="menu-left">
-          <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          <text class="menu-text">空闲时间管理</text>
-        </view>
-        <text class="menu-arrow">›</text>
       </view>
     </view>
-  </view>
 </template>
 
 <script setup>
@@ -111,4 +108,6 @@ function goSchedule() {
   uni.navigateTo({ url: '/pages/rider-schedule/index' })
 }
 </script>
+
+
 

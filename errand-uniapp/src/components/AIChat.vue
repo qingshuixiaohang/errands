@@ -26,7 +26,7 @@
             <line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
           </svg>
         </view>
-        <text class="ai-title">校园外跑 · AI助手</text>
+        <text class="ai-title">抱抱速达 · AI助手</text>
         <view class="close-btn" @tap="open = false">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -185,7 +185,7 @@ function scrollToBottom() {
 function toggle() {
   open.value = !open.value
   if (open.value && messages.value.length === 0) {
-    messages.value.push({ role: "ai", text: "你好👋 我是校园外跑的AI助手，有什么可以帮你的？\n\n例如：垫付流程、配送说明、支付方式、骑手接单……" })
+    messages.value.push({ role: "ai", text: "你好👋 我是抱抱速达的AI助手，有什么可以帮你的？\n\n例如：垫付流程、配送说明、支付方式、骑手接单……" })
   }
 }
 </script>

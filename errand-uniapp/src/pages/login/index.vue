@@ -5,7 +5,7 @@
         <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
       </svg>
     </view>
-    <h2>校园外跑</h2>
+    <h2>抱抱速达</h2>
     <text class="sub">点餐 · 跑腿 · 赚零花</text>
     <view style="width:100%">
       <view class="role-btn" :class="{ selected: selectedRole === 'customer' }" @tap="selectRole('customer')">

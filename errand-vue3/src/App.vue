@@ -12,7 +12,7 @@
   box-sizing: border-box;
 }
 
-/* ===== 校园跑腿 · 鸣潮主题 ===== */
+/* ===== 抱抱速达 · 鸣潮主题 ===== */
 :root {
   --el-color-primary: #6C4FA7;
   --el-color-primary-light-3: #8B5CF6;

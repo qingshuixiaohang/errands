@@ -18,6 +18,8 @@ const menuList = [
   { title: '订单管理', path: '/order', icon: 'collection' },
   { title: '商家管理', path: '/category', icon: 'postcard' },
   { title: '商品管理', path: '/dish', icon: 'dish' },
+  { title: '用户管理', path: '/user', icon: 'user' },
+  { title: '骑手管理', path: '/rider', icon: 'userFilled' },
   { title: '管理员管理', path: '/employee', icon: 'setting' },
 ]
 
@@ -78,8 +80,6 @@ const quitFn = () => {
 
 const websocket = ref<WebSocket | null>(null)
 const shopShow = ref(false)
-const audio1 = ref<HTMLAudioElement | null>(null)
-const audio2 = ref<HTMLAudioElement | null>(null)
 
 const webSocket = () => {
   const clientId = Math.random().toString(36).slice(2)
@@ -90,11 +90,7 @@ const webSocket = () => {
     websocket.value = new WebSocket(socketUrl)
     websocket.value.onopen = () => console.log("浏览器WebSocket已打开")
     websocket.value.onmessage = (msg) => {
-      audio1.value && audio1.value.click()
-      audio1.value!.currentTime = 0; audio2.value!.currentTime = 0
       const jsonMsg = JSON.parse(msg.data)
-      if (jsonMsg.type === 1) audio1.value!.play()
-      else if (jsonMsg.type === 2) audio2.value!.play()
       ElNotification({
         title: jsonMsg.type === 1 ? "待接单" : "催单",
         message: jsonMsg.type === 1 ? `<span>您有1个<span style="color:#6C4FA7">订单待处理</span>,${jsonMsg.content},请及时接单</span>` : `${jsonMsg.content}<span style="color:#6C4FA7;cursor:pointer">去处理</span>`,
@@ -171,7 +167,7 @@ onBeforeUnmount(() => { if (websocket.value) websocket.value.close() })
         <div class="header-left">
           <div class="logo-area">
             <span class="logo-icon">🏃‍♂️</span>
-            <span class="logo-text">校园跑腿</span>
+            <span class="logo-text">抱抱速达</span>
             <span class="logo-badge">后台管理</span>
           </div>
           <el-icon class="collapse-btn" v-if="isCollapse"><Expand @click.stop="isCollapse = !isCollapse" /></el-icon>
@@ -184,9 +180,6 @@ onBeforeUnmount(() => { if (websocket.value) websocket.value.close() })
           <button class="status-change-btn" @click="dialogStatusVisible = true">
             <span>⚙</span> 店铺状态
           </button>
-          <div style="display:none">
-            <audio ref="audio1" hidden><source src="../../assets/preview.mp3" type="audio/mp3" /></audio>
-            <audio ref="audio2" hidden><source src="../../assets/reminder.mp3" type="audio/mp3" /></audio>
           </div>
           <el-dropdown class="user-dropdown">
             <span class="user-trigger">
@@ -201,7 +194,6 @@ onBeforeUnmount(() => { if (websocket.value) websocket.value.close() })
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-        </div>
       </el-header>
       <el-container class="main-container">
         <!-- 左侧导航菜单 -->
@@ -219,7 +211,7 @@ onBeforeUnmount(() => { if (websocket.value) websocket.value.close() })
         <el-container class="content-container">
           <el-main class="mingchao-main"><router-view></router-view></el-main>
           <el-footer class="mingchao-footer">
-            <span class="footer-icon">✦</span> © 2024 校园跑腿 · 后台管理系统 <span class="footer-icon">✦</span>
+            <span class="footer-icon">✦</span> © 2024 抱抱速达 · 后台管理系统 <span class="footer-icon">✦</span>
           </el-footer>
         </el-container>
       </el-container>

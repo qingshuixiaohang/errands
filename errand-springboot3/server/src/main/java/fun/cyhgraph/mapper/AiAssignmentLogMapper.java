@@ -27,4 +27,11 @@ public interface AiAssignmentLogMapper {
     @Select("select * from ai_assignment_log where rider_response='pending' " +
             "and assignment_time < #{deadline}")
     List<AiAssignmentLog> findPendingBefore(LocalDateTime deadline);
+
+    @Select("select al.*, o.number as order_number, o.amount as order_amount, o.address, u.name as rider_name " +
+            "from ai_assignment_log al " +
+            "left join orders o on al.order_id = o.id " +
+            "left join user u on al.selected_rider_id = u.id " +
+            "order by al.assignment_time desc")
+    List<java.util.Map<String, Object>> getLogsWithDetails();
 }
